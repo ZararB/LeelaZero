@@ -1,0 +1,4 @@
+model_checkpoint_path: "kb1-64x6-0"
+all_model_checkpoint_paths: "kb1-64x6-0"
+all_model_checkpoint_timestamps: 1610215387.5746777
+last_preserved_timestamp: 1609551895.3493352
