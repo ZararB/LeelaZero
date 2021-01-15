@@ -113,6 +113,7 @@ def make_map(kind='matrix'):
     az_to_lc0 = np.zeros((80 * 8 * 8, len(policy_index)), dtype=np.float32)
     indices = []
     legal_moves = 0
+    
     for e, m in enumerate(moves):
         if m == 'illegal':
             indices.append(-1)

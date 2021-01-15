@@ -43,5 +43,5 @@ if not os.path.exists(root_dir):
     os.makedirs(root_dir)
 tfp.manager.save(checkpoint_number=START_FROM)
 
-model = tfp.model
+tfp.net.save_txt('weights.txt')
 print("Wrote model to {}".format(tfp.manager.latest_checkpoint))

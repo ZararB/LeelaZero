@@ -211,7 +211,21 @@ policy_index = [
     "h7h8q", "h7h8r", "h7h8b"
 ]
 
-import os
-import proto.net_pb2 as pb
-import net 
+
+
+import chess 
+import numpy as np
+
+board = chess.Board()
+
+
+def board_to_model_input(board):
+
+    model_input = np.zeros((112, 8, 8))
+
+    
+
+
+
+    return model_input 
 
