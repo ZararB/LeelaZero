@@ -5,6 +5,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *_pb2.py
+model/
 
 # C extensions
 *.so
