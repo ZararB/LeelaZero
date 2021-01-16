@@ -23,7 +23,7 @@ argparser.add_argument('-e',
 args = argparser.parse_args()
  """
 
-model_file = "tf/128x10-t60-2-2300.pb.gz"
+model_file = "tf/128x10-t60-2-5300.pb.gz"
 cfg_file = "tf/configs/example.yaml"
 
 with open(cfg_file, "rb") as f:
@@ -43,5 +43,7 @@ if not os.path.exists(root_dir):
     os.makedirs(root_dir)
 tfp.manager.save(checkpoint_number=START_FROM)
 
-tfp.net.save_txt('weights.txt')
+
+model = tfp.model 
+tfp.net.save_txt('weights.txt.gz')
 print("Wrote model to {}".format(tfp.manager.latest_checkpoint))

@@ -1,0 +1,4 @@
+model_checkpoint_path: "128x10-2-0"
+all_model_checkpoint_paths: "128x10-2-0"
+all_model_checkpoint_timestamps: 1610771264.9785502
+last_preserved_timestamp: 1610770832.973572
