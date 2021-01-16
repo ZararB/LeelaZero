@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+leelalogs/
 __pycache__/
 .vscode/
 *.py[cod]

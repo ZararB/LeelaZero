@@ -203,10 +203,10 @@ class Net:
             version = 4
 
         with gzip.open(filename, 'wb') as f:
-            f.write("{}\n".format(version).encode('utf-8'))
+            f.write("{}\n".format(version).encode('ascii'))
             for row in weights:
                 f.write(
-                    (" ".join(map(str, row.tolist())) + "\n").encode('utf-8'))
+                    (" ".join(map(str, row.tolist())) + "\n").encode('ascii'))
 
         size = os.path.getsize(filename) / 1024**2
         print("saved as '{}' {}M".format(filename, round(size, 2)))
