@@ -215,7 +215,7 @@ policy_index = [
 
 import chess 
 import numpy as np
-
+import lcztools 
 board = chess.Board()
 
 
