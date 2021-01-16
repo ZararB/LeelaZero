@@ -1,0 +1,57 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Unknown </title></head><body>
+<h1 id="training">Training</h1>
+<p>The training pipeline resides in <code>tf</code>, this requires tensorflow running on linux (Ubuntu 16.04 in this case). (It can be made to work on windows too, but it takes more effort.)</p>
+<h2 id="installation">Installation</h2>
+<p>Install the requirements under <code>tf/requirements.txt</code>. And call <code>./init.sh</code> to compile the protobuf files.</p>
+<h2 id="data-preparation">Data preparation</h2>
+<p>In order to start a training session you first need to download training data from https://storage.lczero.org/files/training_data/. Several chunks/games are packed into a tar file, and each tar file contains an hour worth of chunks. Preparing data requires the following steps:</p>
+<p><code>wget https://storage.lczero.org/files/training_data/training-run1--20200711-2017.tar
+tar -xzf training-run1--20200711-2017.tar</code></p>
+<h2 id="training-pipeline">Training pipeline</h2>
+<p>Now that the data is in the right format one can configure a training pipeline. This configuration is achieved through a yaml file, see <code>training/tf/configs/example.yaml</code>:</p>
+<p>```yaml
+%YAML 1.2</p>
+<hr />
+<p>name: 'kb1-64x6'                       # ideally no spaces
+gpu: 0                                 # gpu id to process on</p>
+<p>dataset:
+  num_chunks: 100000                   # newest nof chunks to parse
+  train_ratio: 0.90                    # trainingset ratio
+  # For separated test and train data.
+  input_train: '/path/to/chunks/<em>/draw/' # supports glob
+  input_test: '/path/to/chunks/</em>/draw/'  # supports glob
+  # For a one-shot run with all data in one directory.
+  # input: '/path/to/chunks/*/draw/'</p>
+<p>training:
+    batch_size: 2048                   # training batch
+    total_steps: 140000                # terminate after these steps
+    test_steps: 2000                   # eval test set values after this many steps
+    # checkpoint_steps: 10000          # optional frequency for checkpointing before finish
+    shuffle_size: 524288               # size of the shuffle buffer
+    lr_values:                         # list of learning rates
+        - 0.02
+        - 0.002
+        - 0.0005
+    lr_boundaries:                     # list of boundaries
+        - 100000
+        - 130000
+    policy_loss_weight: 1.0            # weight of policy loss
+    value_loss_weight: 1.0             # weight of value loss
+    path: '/path/to/store/networks'    # network storage dir</p>
+<p>model:
+  filters: 64
+  residual_blocks: 6
+...
+```</p>
+<p>The configuration is pretty self explanatory, if you're new to training I suggest looking at the <a href="https://developers.google.com/machine-learning/glossary/">machine learning glossary</a> by google. Now you can invoke training with the following command:</p>
+<p><code>bash
+./train.py --cfg configs/example.yaml --output /tmp/mymodel.txt</code></p>
+<p>This will initialize the pipeline and start training a new neural network. You can view progress by invoking tensorboard:</p>
+<p><code>bash
+tensorboard --logdir leelalogs</code></p>
+<p>If you now point your browser at localhost:6006 you'll see the trainingprogress as the trainingsteps pass by. Have fun!</p>
+<h2 id="restoring-models">Restoring models</h2>
+<p>The training pipeline will automatically restore from a previous model if it exists in your <code>training:path</code> as configured by your yaml config. For initializing from a raw <code>weights.txt</code> file you can use <code>training/tf/net_to_model.py</code>, this will create a checkpoint for you.</p>
+<h2 id="supervised-training">Supervised training</h2>
+<p>Generating trainingdata from pgn files is currently broken and has low priority, feel free to create a PR.</p>
+</body></html>

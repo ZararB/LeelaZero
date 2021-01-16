@@ -1,7 +1,6 @@
 from lcztools import load_network, LeelaBoard
-
-net = load_network('weights.txt.gz', 'pytorch_cuda')
-
+from keras_net import KerasNet
+net = KerasNet()
 board = LeelaBoard()
 
 policy, value = net.evaluate(board)
