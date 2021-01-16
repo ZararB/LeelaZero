@@ -4,8 +4,8 @@ import os
 import yaml
 import tfprocess
 from net import Net
-import tfprocess
-from net import Net
+from collections import OrderedDict
+
 
 class KerasNet:
 
@@ -23,6 +23,10 @@ class KerasNet:
 
         self.model = tfp.model 
 
+    def _softmax(self, x, softmax_temp=1.0):
+        e_x = np.exp((x - np.max(x))/softmax_temp)
+        return e_x / e_x.sum(axis=0)
+
     def evaluate(self, board):
 
         input_planes = board.lcz_features()
@@ -35,3 +39,21 @@ class KerasNet:
         #TODO run model output through a softmax
 
         return model_output
+
+    def _evaluate(self, leela_board, policy):
+
+        legal_uci = [m.uci() for m in leela_board.generate_legal_moves()]
+        
+        if legal_uci:
+            legal_indexes = leela_board.lcz_uci_to_idx(legal_uci)
+            softmaxed = _softmax(policy[legal_indexes])
+            softmaxed_aspython = map(float, softmaxed)
+            policy_legal = OrderedDict(sorted(zip(legal_uci, softmaxed_aspython),
+                                        key = lambda mp: (mp[1], mp[0]),
+                                        reverse=True))
+
+        else:
+            policy_legal = OrderedDict()
+
+        return policy_legal, value
+
