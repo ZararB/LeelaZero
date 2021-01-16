@@ -32,4 +32,4 @@ class KerasNet:
         policy = model_output[0][0]
         value = model_output[1]
 
-
+        return model_output
