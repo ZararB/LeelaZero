@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import numpy as np
 import yaml
 import tfprocess
 from net import Net
@@ -40,13 +41,20 @@ class KerasNet:
 
         return model_output
 
-    def _evaluate(self, leela_board, policy):
+    def _evaluate(self, leela_board):
+
+        input_planes = leela_board.lcz_features()
+        model_input = input_planes.reshape(1, 112, 64)
+        model_output = self.model.predict(model_input)
+
+        policy = model_output[0][0]
+        value = model_output[1]
 
         legal_uci = [m.uci() for m in leela_board.generate_legal_moves()]
         
         if legal_uci:
             legal_indexes = leela_board.lcz_uci_to_idx(legal_uci)
-            softmaxed = _softmax(policy[legal_indexes])
+            softmaxed = self._softmax(policy[legal_indexes])
             softmaxed_aspython = map(float, softmaxed)
             policy_legal = OrderedDict(sorted(zip(legal_uci, softmaxed_aspython),
                                         key = lambda mp: (mp[1], mp[0]),
