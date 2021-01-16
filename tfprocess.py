@@ -59,7 +59,7 @@ class ApplyPolicyMap(tf.keras.layers.Layer):
 
 
 class TFProcess:
-    def __init__(self, cfg):
+    def __init__(self, cfg, gpu=False):
         self.cfg = cfg
         self.net = Net()
         self.root_dir = os.path.join(self.cfg['training']['path'],
@@ -159,11 +159,13 @@ class TFProcess:
         self.renorm_max_d = self.cfg['training'].get('renorm_max_d', 0)
         self.renorm_momentum = self.cfg['training'].get(
             'renorm_momentum', 0.99)
-        gpus = tf.config.experimental.list_physical_devices('GPU')
-        tf.config.experimental.set_visible_devices(gpus[self.cfg['gpu']],
-                                                   'GPU')
-        tf.config.experimental.set_memory_growth(gpus[self.cfg['gpu']], True)
-
+            
+        if gpu:
+            gpus = tf.config.experimental.list_physical_devices('GPU')
+            tf.config.experimental.set_visible_devices(gpus[self.cfg['gpu']],
+                                                    'GPU')
+            tf.config.experimental.set_memory_growth(gpus[self.cfg['gpu']], True)
+        
         if self.model_dtype == tf.float16:
             tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
 

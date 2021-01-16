@@ -17,7 +17,7 @@ class KerasNet:
         cfg = yaml.safe_load(cfg)
         print(yaml.dump(cfg, default_flow_style=False))
 
-        tfp = tfprocess.TFProcess(cfg)
+        tfp = tfprocess.TFProcess(cfg, gpu=True)
         tfp.init_net_v2()
         tfp.replace_weights_v2(model_file)
 
@@ -31,5 +31,7 @@ class KerasNet:
 
         policy = model_output[0][0]
         value = model_output[1]
+
+        #TODO run model output through a softmax
 
         return model_output
