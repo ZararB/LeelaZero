@@ -110,3 +110,6 @@ venv.bak/
 tf/proto/
 
 tf/training_data/
+test_data/
+*.log
+get-pip.py

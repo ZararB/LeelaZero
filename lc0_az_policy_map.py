@@ -135,12 +135,6 @@ def make_map(kind='matrix'):
         return az_to_lc0
     elif kind == 'index':
         return indices
-
-
-
-ma = make_map()
-print(ma)
-'''
 if __name__ == "__main__":
     # Generate policy map include file for lc0
     if len(sys.argv) != 2:
@@ -183,4 +177,3 @@ namespace lczero {
                 f.write(',')
         f.write('};\n\n')
         f.write('}  // namespace lczero')
-'''

@@ -240,8 +240,6 @@ class TFProcess:
 
         self.policy_accuracy_fn = policy_accuracy
 
-        self.policy_accuracy_fn = policy_accuracy
-
         def moves_left_mean_error_fn(target, output):
             output = tf.cast(output, tf.float32)
             return tf.reduce_mean(tf.abs(target - output))
@@ -520,10 +518,13 @@ class TFProcess:
                                       moves_left_loss) + reg_term
             if self.loss_scale != 1:
                 total_loss = self.optimizer.get_scaled_loss(total_loss)
+        
+        # Calculate MSE loss for reporting (always needed)
         if self.wdl:
             mse_loss = self.mse_loss_fn(self.qMix(z, q), value)
         else:
-            value_loss = self.value_loss_fn(self.qMix(z, q), value)
+            mse_loss = self.mse_loss_fn(self.qMix(z, q), value)
+        
         return policy_loss, value_loss, mse_loss, moves_left_loss, reg_term, tape.gradient(
             total_loss, self.model.trainable_weights)
 

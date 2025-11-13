@@ -37,9 +37,10 @@ class KerasNet:
         policy = model_output[0][0]
         value = model_output[1]
 
-        #TODO run model output through a softmax
+        # Apply softmax to policy output
+        policy = self._softmax(policy)
 
-        return model_output
+        return policy, value
 
     def _evaluate(self, leela_board):
 

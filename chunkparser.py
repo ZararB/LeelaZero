@@ -349,8 +349,8 @@ class ChunkParser:
                         for item in self.sample_record(chunkdata):
                             writer.send_bytes(item)
 
-            except:
-                print("failed to parse {}".format(filename))
+            except Exception as e:
+                print(f"failed to parse {filename}: {e}")
                 continue
 
     def v5_gen(self):
