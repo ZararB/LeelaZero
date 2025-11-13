@@ -113,3 +113,4 @@ tf/training_data/
 test_data/
 *.log
 get-pip.py
+sample_training_output.txt
