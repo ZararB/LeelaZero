@@ -1,86 +1,52 @@
 # LeelaZero Training Pipeline
 
-A training system for LeelaZero-style chess neural networks built with TensorFlow and Keras. This implementation provides a complete pipeline for training deep learning models on chess game data, with support for advanced training techniques and efficient data processing.
+Training infrastructure for LeelaZero-style chess neural networks. This codebase handles the full training pipeline from data loading to model checkpointing, built on TensorFlow and Keras.
 
-## Overview
+## What This Does
 
-This project implements the training infrastructure for chess neural networks similar to LeelaZero. The system handles everything from data loading and preprocessing to model training, checkpointing, and weight serialization. It's designed to work with large-scale distributed training data while maintaining flexibility for experimentation.
+This is a complete training system for chess neural networks. It takes game data in binary format, trains a ResNet-based network with squeeze-excitation blocks, and produces models compatible with LeelaZero. The network predicts both move probabilities (policy) and position evaluations (value).
 
-The architecture is based on ResNet with squeeze-excitation blocks, producing policy and value predictions for chess positions. The training pipeline supports multiple input formats, various network configurations, and includes several advanced techniques to improve training stability and model performance.
-
-## Features
-
-The training system includes several key components:
-
-**Neural Network Architecture**
-- ResNet-based architecture with configurable depth and width
-- Squeeze-excitation blocks for channel attention
-- Multiple output heads: policy (convolutional or classical), value (WDL or classical), and optional moves-left prediction
-- Support for different input encodings (classical, canonical variants)
-
-**Training Infrastructure**
-- Stochastic Weight Averaging (SWA) for improved generalization
-- Batch renormalization for stable training with small batches
-- Mixed precision training (FP16) for faster computation
-- Gradient clipping to prevent explosion
-- Learning rate scheduling with warmup
-- Legal move masking during policy training
-- Weighted multi-component loss functions
-
-**Data Pipeline**
-- Efficient binary format parsing supporting V3, V4, and V5 data formats
-- Multiprocessing for parallel data loading
-- Shuffle buffers for data randomization
-- Support for large-scale distributed training datasets
+The training pipeline supports various network configurations, multiple data formats, and includes techniques like stochastic weight averaging and batch renormalization. It's designed to handle large datasets efficiently through multiprocessing and optimized data loading.
 
 ## Installation
 
-Install the required dependencies:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-The main dependencies are TensorFlow 2.0.3 or later, NumPy, PyYAML, and Protobuf. If you need to regenerate protobuf files from the source definitions:
+You'll need TensorFlow 2.0.3 or later, NumPy, PyYAML, and Protobuf. If you need to regenerate the protobuf files:
 
 ```bash
 protoc --python_out=. libs/lczero-common/proto/*.proto
 ```
 
-## Quick Start
+## Getting Started
 
-Generate synthetic test data to verify the setup:
+First, generate some test data to make sure everything works:
 
 ```bash
 python generate_test_data.py
 ```
 
-This creates test chunks in `test_data/train/` and `test_data/test/` directories. You should see output like:
+This creates synthetic training chunks in `test_data/train/` and `test_data/test/`. You should see output confirming the files were created.
 
-```
-Generating training data...
-Generated 100 records in test_data/train/training.1.gz
-...
-Generating test data...
-Generated 100 records in test_data/test/training.1.gz
-Test data generation complete!
-```
-
-Run training with the test configuration:
+Run a quick training test:
 
 ```bash
 python train.py --cfg configs/test_config.yaml
 ```
 
-This will train a small network (64 filters, 6 residual blocks) for 20 steps as a quick verification. The test configuration is optimized for fast validation with minimal resource usage.
+The test config uses a small network (64 filters, 6 blocks) and runs for just 20 steps. It's meant to verify the setup works without using many resources.
 
-For production training, use a full configuration:
+For actual training, use the example configuration:
 
 ```bash
 python train.py --cfg configs/example.yaml --output my_model
 ```
 
-To resume training from a checkpoint:
+To resume from a checkpoint:
 
 ```bash
 python train.py --cfg configs/example.yaml --resume
@@ -88,148 +54,37 @@ python train.py --cfg configs/example.yaml --resume
 
 ## Configuration
 
-Training behavior is controlled through YAML configuration files. The configuration is divided into three main sections: model architecture, training parameters, and dataset settings.
+Everything is configured through YAML files. There are three main sections:
 
-**Model Configuration**
+**Model settings** control the network architecture - number of filters, residual blocks, squeeze-excitation ratio, and which heads to use (policy, value, moves left).
 
-Controls the neural network architecture:
+**Training settings** set batch size, learning rates, loss weights, and training features like SWA or batch renormalization.
 
-```yaml
-model:
-  filters: 128              # Number of filters in residual blocks
-  residual_blocks: 10       # Number of residual blocks
-  se_ratio: 4              # Squeeze-excitation ratio
-  value_channels: 32       # Value head channels
-  moves_left: 'v1'         # Moves left head type (or 'none')
-  input_type: 'classic'    # Input format
-  policy: 'convolution'    # Policy head type
-  value: 'wdl'            # Value head type
-```
+**Dataset settings** specify where to find training data, how many workers to use for data loading, and how many chunks to process.
 
-**Training Configuration**
+See `configs/example.yaml` for a complete example with comments explaining each option.
 
-Sets training hyperparameters and behavior:
+## Network Architecture
 
-```yaml
-training:
-  batch_size: 4096
-  total_steps: 1000000
-  lr_values: [0.0002, 0.0002]
-  lr_boundaries: [100]
-  policy_loss_weight: 1.0
-  value_loss_weight: 1.0
-  swa: true
-  swa_steps: 25
-```
+The network takes 112 input planes (8×8 board representations) encoding piece positions, castling rights, and game state. These go through an initial convolution, then a stack of residual blocks with squeeze-excitation. The output splits into two heads: one for policy (1858 possible moves) and one for value (win/draw/loss probabilities).
 
-**Dataset Configuration**
+The residual blocks use 3×3 convolutions with batch normalization and ReLU activations. Squeeze-excitation adds channel attention to help the network focus on important features. The policy head uses a convolutional approach that maps to the move space, while the value head uses fully connected layers.
 
-Specifies data sources and loading parameters:
+## Code Structure
 
-```yaml
-dataset:
-  input_train: '/path/to/train/chunks/*.gz'
-  input_test: '/path/to/test/chunks/*.gz'
-  train_workers: 16
-  test_workers: 8
-  num_chunks: 100000
-```
+The main components are:
 
-See `configs/example.yaml` for a complete configuration example.
+- `train.py` - Entry point that loads config, sets up datasets, and runs training
+- `tfprocess.py` - Handles model construction, loss functions, and the training loop
+- `net.py` - Manages weight conversion between TensorFlow and LeelaZero protobuf formats
+- `chunkparser.py` - Parses binary training data with multiprocessing support
+- `generate_test_data.py` - Creates synthetic data for testing
 
-## Architecture
+The training loop handles checkpointing, learning rate scheduling, gradient clipping, and logging. Metrics go to TensorBoard in the `leelalogs/` directory.
 
-The network processes chess positions through the following structure:
+## Training Output
 
-```
-Input (112 planes × 8×8)
-  ↓
-Initial Convolution (3×3, filters)
-  ↓
-Residual Blocks × N
-  ├─ Conv 3×3 → BN → ReLU
-  ├─ Conv 3×3 → BN → SE
-  └─ Residual Connection
-  ↓
-Policy Head                    Value Head
-  ├─ Conv 3×3 → BN → ReLU      ├─ Conv 1×1 → BN → ReLU
-  ├─ Conv 3×3 (80 channels)    ├─ Dense 128 → ReLU
-  └─ Policy Map                 └─ Dense 3 (WDL)
-  ↓                              ↓
-Policy Output (1858 moves)    Value Output
-```
-
-The input consists of 112 feature planes encoding the board state, piece positions, castling rights, and other game information. The network processes this through a series of residual blocks with squeeze-excitation, then branches into separate heads for policy (move probabilities) and value (position evaluation).
-
-## Key Components
-
-**TFProcess** (`tfprocess.py`)
-Main training class that handles model construction, loss computation, and the training loop. Manages checkpointing, SWA updates, and logging.
-
-**Net** (`net.py`)
-Handles network weight management and conversion between TensorFlow formats and LeelaZero protobuf format. Supports loading and saving model weights.
-
-**ChunkParser** (`chunkparser.py`)
-Efficient binary data parser that reads training chunks in V3/V4/V5 formats. Uses multiprocessing for parallel data loading and includes shuffle buffers for randomization.
-
-**train.py**
-Main entry point for training. Handles configuration loading, dataset creation, and orchestrates the training process.
-
-## File Structure
-
-```
-.
-├── train.py                 # Main training script
-├── tfprocess.py            # Training process and model definition
-├── net.py                  # Network weight management
-├── chunkparser.py          # Data parsing pipeline
-├── keras_net.py            # Model inference wrapper
-├── generate_test_data.py   # Synthetic data generator
-├── configs/                # Configuration files
-│   ├── example.yaml
-│   └── test_config.yaml
-├── scripts/                # Utility scripts
-└── proto/                  # Protobuf definitions
-```
-
-## Advanced Usage
-
-**Custom Network Architecture**
-
-Modify `construct_net_v2()` in `tfprocess.py` to change the network structure:
-
-```python
-def construct_net_v2(self, inputs):
-    # Modify architecture here
-    ...
-```
-
-**Custom Loss Functions**
-
-Loss functions are defined in `TFProcess.init_net_v2()`. You can modify the policy, value, or moves-left loss functions to experiment with different objectives.
-
-**Data Format**
-
-Training data uses a binary format with three versions:
-- V3: Legacy format
-- V4: Extended format with root/best Q values
-- V5: Full format with moves left and input format tags
-
-Each training record contains 112 input planes (8×8 board representation), 1858 policy probabilities, a 3-value WDL target (win/draw/loss), and various metadata including Q values and move counts.
-
-## Monitoring Training
-
-Training metrics are logged to TensorBoard. View them with:
-
-```bash
-tensorboard --logdir leelalogs/
-```
-
-The logs include policy and value losses, accuracies, MSE loss, learning rate, gradient norms, and weight update ratios. This helps track training progress and diagnose issues.
-
-## Example Training Output
-
-Here's a sample of what training output looks like:
+When training runs, you'll see output like this:
 
 ```
 2025-11-12 23:15:32,124 - __main__ - INFO - Loading configuration from configs/test_config.yaml
@@ -249,32 +104,31 @@ Model saved in file: test_model/test-64x6-20
 Weights saved as 'test_model/test-64x6-20.pb.gz' 2.1M
 ```
 
-The output shows training progress with policy and value losses decreasing over time, along with improving accuracy metrics. The training speed (positions per second) indicates data pipeline efficiency. Checkpoints are automatically saved at specified intervals.
+Losses should decrease over time, and accuracy should improve. The positions per second metric shows how fast the data pipeline is running. Checkpoints are saved automatically at the intervals you configure.
 
-## Troubleshooting
+View detailed metrics in TensorBoard:
 
-**Out of Memory**
+```bash
+tensorboard --logdir leelalogs/
+```
 
-If you encounter memory issues, try reducing the batch size, increasing the number of batch splits, or reducing the shuffle buffer size in your configuration.
+## Data Format
 
-**Slow Training**
+Training data comes in binary chunks. The code supports V3, V4, and V5 formats. V5 is the most complete, including moves left predictions and input format tags. Each record contains 112 input planes, 1858 policy probabilities, a 3-value WDL target, and metadata like Q values.
 
-Training speed can be improved by increasing the number of data loading workers, enabling mixed precision training (FP16), and ensuring data is stored on fast storage like SSDs or RAM disks.
+## Customization
 
-**No Training Data Found**
+To modify the network architecture, edit `construct_net_v2()` in `tfprocess.py`. Loss functions are defined in `TFProcess.init_net_v2()` - you can adjust the policy, value, or moves-left losses there.
 
-Verify that the paths specified in `input_train` and `input_test` are correct, that chunk files exist at those locations, and that file permissions allow reading.
+## Common Issues
+
+If you run out of memory, reduce the batch size or increase batch splits. For slow training, add more data loading workers or enable mixed precision (FP16). Make sure your data paths in the config are correct and the chunk files are readable.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0.
+GNU General Public License v3.0
 
 ## References
 
-- [LeelaZero](https://github.com/LeelaChessZero/lc0) - The original LeelaZero project
-- [AlphaZero Paper](https://arxiv.org/abs/1712.01815) - The research paper that inspired this work
-- [TensorFlow Documentation](https://www.tensorflow.org/) - Framework documentation
-
-## Acknowledgments
-
-This codebase is based on the LeelaZero training infrastructure, with improvements focused on maintainability, code quality, and testing.
+- [LeelaZero](https://github.com/LeelaChessZero/lc0) - Original project
+- [AlphaZero Paper](https://arxiv.org/abs/1712.01815) - Research background

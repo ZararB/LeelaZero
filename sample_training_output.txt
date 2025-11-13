@@ -1,0 +1,25 @@
+2025-11-12 23:15:32,124 - __main__ - INFO - Loading configuration from configs/test_config.yaml
+2025-11-12 23:15:32,128 - __main__ - INFO - Using GPU 0
+2025-11-12 23:15:32,128 - __main__ - INFO - Found 9 chunk files
+2025-11-12 23:15:32,128 - __main__ - INFO - Found 1 chunk files
+2025-11-12 23:15:32,128 - __main__ - INFO - Creating training dataset...
+Using 2 worker processes.
+2025-11-12 23:15:32,245 - __main__ - INFO - Creating test dataset...
+Using 1 worker processes.
+2025-11-12 23:15:32,312 - __main__ - INFO - Initializing training process...
+2025-11-12 23:15:33,456 - __main__ - INFO - Starting training:
+2025-11-12 23:15:33,456 - __main__ - INFO -   Batch size: 64
+2025-11-12 23:15:33,456 - __main__ - INFO -   Batch splits: 1
+2025-11-12 23:15:33,456 - __main__ - INFO -   Test batches: 10
+2025-11-12 23:15:33,456 - __main__ - INFO -   Total steps: 20
+
+step 0, policy=2.345 value=0.892 mse=0.234 policy accuracy=12.5% value accuracy=45.2% mse=0.234 policy entropy=4.12 policy ul=2.89
+step 5, lr=0.01 policy=2.123 value=0.856 mse=0.198 reg=0.012 total=2.991 (1250.3 pos/s)
+step 10, policy=1.987 value=0.823 mse=0.167 policy accuracy=18.3% value accuracy=52.1% mse=0.167 policy entropy=4.45 policy ul=2.67
+step 15, lr=0.01 policy=1.856 value=0.789 mse=0.145 reg=0.011 total=2.656 (1280.7 pos/s)
+step 20, policy=1.734 value=0.756 mse=0.128 policy accuracy=22.7% value accuracy=58.3% mse=0.128 policy entropy=4.78 policy ul=2.45
+Model saved in file: test_model/test-64x6-20
+Weights saved as 'test_model/test-64x6-20.pb.gz' 2.1M
+
+Training completed successfully.
+
